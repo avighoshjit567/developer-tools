@@ -1,26 +1,107 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand */
+  --color-brand: #147AFF;
+  --color-brand-hover: #1169DB;
+  --color-brand-surface-hover: #0E57B6;
+
+  /* Surfaces */
+  --color-surface-primary-light: #FFFFFF;
+  --color-surface-primary-dark: #1F2328;
+  --color-surface-secondary-light: #FAFBFC;
+  --color-surface-secondary-dark: #23272D;
+  --color-surface-tertiary-light: #F2F5F7;
+  --color-surface-tertiary-dark: #292E39;
+  --color-surface-tertiary-emp-light: #EDF0F2;
+  --color-surface-tertiary-emp-dark: #373E4A;
+  --color-surface-success-light: #C0E4CD;
+  --color-surface-success-dark: #1E3F30;
+  --color-surface-warning-light: #FEEEDC;
+  --color-surface-warning-dark: #633101;
+  --color-surface-error-light: #FDE9E6;
+  --color-surface-error-dark: #5D1F18;
+  --color-surface-info-light: #DDECFF;
+  --color-surface-info-dark: #062349;
+
+  /* Text */
+  --color-text-primary-light: #1F2128;
+  --color-text-primary-dark: #E9EBED;
+  --color-text-secondary-light: #40444F;
+  --color-text-secondary-dark: #CBCFD5;
+  --color-text-tertiary-light: #535865;
+  --color-text-tertiary-dark: #89909D;
+  --color-text-on-brand: #FFFFFF;
+  --color-text-success: #149744;
+  --color-text-warning: #DB790B;
+  --color-text-error: #CC4436;
+  --color-text-info: #1169DB;
+
+  /* Icons */
+  --color-icon-primary-light: #535865;
+  --color-icon-primary-dark: #E9EBED;
+  --color-icon-secondary-light: #737985;
+  --color-icon-secondary-dark: #CBCFD5;
+  --color-icon-success: #18AD4F;
+  --color-icon-error: #E24C3C;
+  --color-icon-warning: #F2870D;
+  --color-icon-info: #1169DB;
+
+  /* Borders */
+  --color-border-primary-light: #E4E7EB;
+  --color-border-primary-dark: #373E4A;
+  --color-border-secondary-light: #EDF0F2;
+  --color-border-secondary-dark: #333842;
+
+  /* Font */
+  --font-sans: var(--font-inter);
+
+  /* Font sizes - xCloud tokens */
+  --font-size-heading-xxl: 2.25rem;
+  --font-size-heading-xl: 1.5rem;
+  --font-size-heading-lg: 1.375rem;
+  --font-size-heading-md: 1.25rem;
+  --font-size-heading-sm: 1.125rem;
+  --font-size-heading-xs: 1rem;
+  --font-size-body-lg: 1.125rem;
+  --font-size-body-md: 1rem;
+  --font-size-body-sm: 0.875rem;
+  --font-size-body-xs: 0.75rem;
+  --font-size-body-xxs: 0.625rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Light mode (default) */
+:root {
+  --bg-primary: var(--color-surface-primary-light);
+  --bg-secondary: var(--color-surface-secondary-light);
+  --bg-tertiary: var(--color-surface-tertiary-light);
+  --text-primary: var(--color-text-primary-light);
+  --text-secondary: var(--color-text-secondary-light);
+  --text-tertiary: var(--color-text-tertiary-light);
+  --border-primary: var(--color-border-primary-light);
+  --border-secondary: var(--color-border-secondary-light);
+  --icon-primary: var(--color-icon-primary-light);
+  --icon-secondary: var(--color-icon-secondary-light);
+}
+
+/* Dark mode */
+.dark {
+  --bg-primary: var(--color-surface-primary-dark);
+  --bg-secondary: var(--color-surface-secondary-dark);
+  --bg-tertiary: var(--color-surface-tertiary-dark);
+  --text-primary: var(--color-text-primary-dark);
+  --text-secondary: var(--color-text-secondary-dark);
+  --text-tertiary: var(--color-text-tertiary-dark);
+  --border-primary: var(--color-border-primary-dark);
+  --border-secondary: var(--color-border-secondary-dark);
+  --icon-primary: var(--color-icon-primary-dark);
+  --icon-secondary: var(--color-icon-secondary-dark);
 }
