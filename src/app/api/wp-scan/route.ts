@@ -6,7 +6,7 @@ export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
   try {
-    const { domain } = await req.json();
+    const { domain, forceFresh } = await req.json();
 
     if (!domain || typeof domain !== "string") {
       return new Response(JSON.stringify({ error: "Domain is required" }), {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         send({ type: "scan_started", domain: cleanDomain });
 
         try {
-          const result = await runWpScan(cleanDomain, (check, label, progress, total) => {
+          const result = await runWpScan(cleanDomain, !!forceFresh, (check, label, progress, total) => {
             send({ type: "check_complete", check, label, progress, total });
           });
           send({ type: "scan_complete", result });

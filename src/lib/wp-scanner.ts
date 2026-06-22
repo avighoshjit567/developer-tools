@@ -24,6 +24,7 @@ type ProgressCallback = (check: string, label: string, progress: number, total: 
 
 export async function runWpScan(
   domain: string,
+  forceFresh: boolean = false,
   onProgress?: ProgressCallback
 ): Promise<WpScanResult> {
   const startTime = Date.now();
@@ -35,12 +36,18 @@ export async function runWpScan(
     onProgress?.(check, label, completed, totalChecks);
   }
 
+  // Cache-busting headers when forceFresh is enabled
+  const fetchHeaders: HeadersInit = forceFresh
+    ? { "Cache-Control": "no-cache, no-store", Pragma: "no-cache" }
+    : {};
+
   // First, fetch the homepage HTML (shared by multiple checks)
   let pageHtml = "";
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(`https://${domain}`, { signal: controller.signal, redirect: "follow" });
+    const url = forceFresh ? `https://${domain}/?nocache=${Date.now()}` : `https://${domain}`;
+    const res = await fetch(url, { signal: controller.signal, redirect: "follow", headers: fetchHeaders });
     clearTimeout(id);
     pageHtml = await res.text().catch(() => "");
   } catch {
@@ -48,7 +55,8 @@ export async function runWpScan(
     try {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 10000);
-      const res = await fetch(`http://${domain}`, { signal: controller.signal, redirect: "follow" });
+      const url = forceFresh ? `http://${domain}/?nocache=${Date.now()}` : `http://${domain}`;
+      const res = await fetch(url, { signal: controller.signal, redirect: "follow", headers: fetchHeaders });
       clearTimeout(id);
       pageHtml = await res.text().catch(() => "");
     } catch {
@@ -59,7 +67,7 @@ export async function runWpScan(
   // Run all checks in parallel
   const [wpDetect, plugins, theme, loginSecurity, files, server, perf, seo] =
     await Promise.all([
-      checkWpDetect(domain).then((r) => { progress("wp-detect", "WordPress Detection"); return r; }),
+      checkWpDetect(domain, pageHtml).then((r) => { progress("wp-detect", "WordPress Detection"); return r; }),
       checkWpPlugins(domain, pageHtml).then((r) => { progress("wp-plugins", "Plugin Enumeration"); return r; }),
       checkWpThemes(domain, pageHtml).then((r) => { progress("wp-themes", "Theme Detection"); return r; }),
       checkWpLoginSecurity(domain).then((r) => { progress("wp-login", "Login Security"); return r; }),

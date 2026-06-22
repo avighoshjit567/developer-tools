@@ -10,7 +10,7 @@ export function useWpScanner() {
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const startScan = useCallback((domain: string) => {
+  const startScan = useCallback((domain: string, forceFresh?: boolean) => {
     // Abort previous scan
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -21,7 +21,7 @@ export function useWpScanner() {
     setResult(null);
     setError(null);
 
-    const body = JSON.stringify({ domain });
+    const body = JSON.stringify({ domain, forceFresh: !!forceFresh });
 
     fetch("/api/wp-scan", {
       method: "POST",

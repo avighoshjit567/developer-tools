@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useWpScanner } from "@/hooks/use-wp-scanner";
 import { ScanInput } from "@/components/domain-inspector/scan-input";
@@ -16,7 +16,25 @@ import { WpDetectedPlugins } from "@/components/wp-health/wp-detected-plugins";
 import { WpAccessAndApi } from "@/components/wp-health/wp-access-api";
 import { WpVersionExposure } from "@/components/wp-health/wp-version-exposure";
 import { ShareLinks } from "@/components/domain-inspector/share-links";
-import { AlertCircle, AlertTriangle } from "lucide-react";
+import { AlertCircle, AlertTriangle, HelpCircle } from "lucide-react";
+
+const RECENT_KEY = "wp-health-recent";
+const MAX_RECENT = 5;
+
+function getRecentDomains(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function addRecentDomain(domain: string) {
+  const recent = getRecentDomains().filter((d) => d !== domain);
+  recent.unshift(domain);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+}
 
 export default function WpHealthCheckerPage() {
   return (
@@ -36,21 +54,32 @@ function WpHealthCheckerContent() {
   const searchParams = useSearchParams();
   const { scanning, progress, result, error, startScan } = useWpScanner();
   const autoScanned = useRef(false);
+  const [authorized, setAuthorized] = useState(true);
+  const [forceFresh, setForceFresh] = useState(false);
+  const [recentDomains, setRecentDomains] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecentDomains(getRecentDomains());
+  }, []);
 
   useEffect(() => {
     const domain = searchParams.get("domain");
     if (domain && !autoScanned.current) {
       autoScanned.current = true;
-      startScan(domain);
+      handleScan(domain);
     }
-  }, [searchParams, startScan]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
-  function handleScan(domain: string) {
+  const handleScan = useCallback((domain: string) => {
+    if (!authorized) return;
     const url = new URL(window.location.href);
     url.searchParams.set("domain", domain);
     window.history.pushState({}, "", url.toString());
-    startScan(domain);
-  }
+    addRecentDomain(domain);
+    setRecentDomains(getRecentDomains());
+    startScan(domain, forceFresh);
+  }, [authorized, forceFresh, startScan]);
 
   return (
     <div className="px-6 pb-16">
@@ -66,8 +95,46 @@ function WpHealthCheckerContent() {
           clients.
         </p>
         <div className="mt-6">
-          <ScanInput onScan={handleScan} loading={scanning} />
+          <ScanInput onScan={handleScan} loading={scanning || !authorized} />
         </div>
+
+        {/* Checkboxes */}
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <ScanOption
+            checked={authorized}
+            onChange={setAuthorized}
+            label="I am authorized to scan this website"
+            tooltip="Only scan websites you own or have explicit permission to test."
+          />
+          <ScanOption
+            checked={forceFresh}
+            onChange={setForceFresh}
+            label="Force fresh scan (bypass target site cache)"
+            tooltip="Adds cache-busting headers to requests so you get the latest state of the site."
+          />
+        </div>
+
+        {/* Divider + Recent */}
+        {recentDomains.length > 0 && (
+          <div className="mt-5">
+            <div className="mx-auto mb-4 h-px w-48 bg-[var(--border-primary)]" />
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                Recent:
+              </span>
+              {recentDomains.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => handleScan(d)}
+                  disabled={scanning || !authorized}
+                  className="rounded-full border border-[var(--border-primary)] bg-[var(--bg-primary)] px-3 py-1 text-[0.8125rem] font-medium text-[var(--text-primary)] transition-colors hover:border-brand hover:text-brand disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Scanning progress */}
@@ -166,5 +233,56 @@ function WpHealthCheckerContent() {
         </div>
       )}
     </div>
+  );
+}
+
+function ScanOption({
+  checked,
+  onChange,
+  label,
+  tooltip,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  tooltip: string;
+}) {
+  const [showTip, setShowTip] = useState(false);
+
+  return (
+    <label className="group flex cursor-pointer items-center gap-2.5">
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border-2 transition-colors ${
+          checked
+            ? "border-brand bg-brand text-white"
+            : "border-[var(--border-primary)] bg-[var(--bg-primary)] text-transparent"
+        }`}
+      >
+        <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 6l3 3 5-5" />
+        </svg>
+      </button>
+      <span className="text-[0.8125rem] font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+        {label}
+      </span>
+      <span
+        className="relative"
+        onMouseEnter={() => setShowTip(true)}
+        onMouseLeave={() => setShowTip(false)}
+        onClick={(e) => { e.preventDefault(); setShowTip((v) => !v); }}
+      >
+        <HelpCircle className="h-3.5 w-3.5 cursor-help text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-secondary)]" />
+        {showTip && (
+          <span className="absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 rounded-lg border border-[var(--border-primary)] bg-[var(--bg-secondary)] px-3 py-2 text-left text-[0.75rem] leading-relaxed text-[var(--text-secondary)] shadow-lg">
+            {tooltip}
+            <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[var(--bg-secondary)]" />
+          </span>
+        )}
+      </span>
+    </label>
   );
 }
