@@ -4,13 +4,14 @@ import { CopyButton } from "@/components/ui/copy-button";
 
 interface ShareLinksProps {
   domain: string;
+  basePath?: string;
 }
 
-export function ShareLinks({ domain }: ShareLinksProps) {
+export function ShareLinks({ domain, basePath = "/domain-inspector" }: ShareLinksProps) {
   const shareUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/domain-inspector?domain=${domain}`
-      : `/domain-inspector?domain=${domain}`;
+      ? `${window.location.origin}${basePath}?domain=${domain}`
+      : `${basePath}?domain=${domain}`;
 
   return (
     <div className="flex flex-col items-center gap-2 sm:flex-row">

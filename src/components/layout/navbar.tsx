@@ -12,7 +12,7 @@ const tools = [
   { name: "Quick Scan", href: "/", badge: null },
   { name: "Domain Inspector", href: "/domain-inspector", badge: null },
   { name: "Email DNS Checker", href: "/email-dns-checker", badge: "Soon" },
-  { name: "WP Health Checker", href: "/wp-health-checker", badge: "Soon" },
+  { name: "WP Health Checker", href: "/wp-health-checker", badge: null },
   { name: "DNS Propagation", href: "/dns-propagation", badge: "Soon" },
 ];
 

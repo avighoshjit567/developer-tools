@@ -26,6 +26,8 @@ export interface QuickFacts {
   hosting: string;
   sslExpires: string;
   platform: string;
+  cloudflareDns: boolean;
+  cloudflareProxy: boolean;
 }
 
 export interface Issue {

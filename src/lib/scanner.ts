@@ -98,11 +98,13 @@ export async function runDomainScan(
       ? `${whoisResult.expiryDate} (${whoisResult.expiryDaysRemaining}d)`
       : whoisResult.expiryDate
     : "Unknown";
+  const cloudflareDns = nsProvider === "Cloudflare";
+  const cloudflareProxy = cloudflareResult.isCloudflare;
   const quickFacts: QuickFacts = {
     registrar: whoisResult.registrar,
     nsProvider,
     ipAddress: ip
-      ? `${ip}${cloudflareResult.isCloudflare ? " (Cloudflare Proxy)" : ""}`
+      ? `${ip}${cloudflareProxy ? " (Cloudflare Proxy)" : ""}`
       : "Unknown",
     mail: dnsResult.mx[0]?.exchange || "None",
     dmarc: emailAuthResult.dmarc.policy
@@ -111,11 +113,13 @@ export async function runDomainScan(
       : "None",
     expires: expiryDisplay,
     domainAge: whoisResult.domainAge,
-    hosting: cloudflareResult.isCloudflare
+    hosting: cloudflareProxy
       ? "Hidden by Cloudflare"
       : httpProbeResult.serverHeader || "Unknown",
     sslExpires: sslResult.active ? sslResult.validTo : "N/A",
     platform: httpProbeResult.platform,
+    cloudflareDns,
+    cloudflareProxy,
   };
 
   // Build issues and fix list
