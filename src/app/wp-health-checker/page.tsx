@@ -53,7 +53,7 @@ export default function WpHealthCheckerPage() {
 function WpHealthCheckerContent() {
   const searchParams = useSearchParams();
   const { scanning, progress, result, error, startScan } = useWpScanner();
-  const autoScanned = useRef(false);
+  const lastScannedDomain = useRef<string | null>(null);
   const [authorized, setAuthorized] = useState(true);
   const [forceFresh, setForceFresh] = useState(false);
   const [recentDomains, setRecentDomains] = useState<string[]>([]);
@@ -64,12 +64,16 @@ function WpHealthCheckerContent() {
 
   useEffect(() => {
     const domain = searchParams.get("domain");
-    if (domain && !autoScanned.current) {
-      autoScanned.current = true;
-      handleScan(domain);
+    if (domain && domain !== lastScannedDomain.current) {
+      lastScannedDomain.current = domain;
+      addRecentDomain(domain);
+      setRecentDomains(getRecentDomains());
+      const url = new URL(window.location.href);
+      url.searchParams.set("domain", domain);
+      window.history.pushState({}, "", url.toString());
+      startScan(domain, forceFresh);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, startScan, forceFresh]);
 
   const handleScan = useCallback((domain: string) => {
     if (!authorized) return;

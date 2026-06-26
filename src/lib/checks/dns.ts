@@ -1,8 +1,12 @@
 import { promises as dns } from "dns";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+function sanitizeDomain(domain: string): string {
+  return domain.replace(/[^a-z0-9.-]/gi, '').toLowerCase();
+}
 
 export interface DnsResult {
   a: string[];
@@ -24,6 +28,7 @@ async function safeResolve<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 }
 
 export async function checkDns(domain: string): Promise<DnsResult> {
+  domain = sanitizeDomain(domain);
   const [a, aaaa, mx, ns, txt, caa, soa, dnssec] = await Promise.all([
     safeResolve(() => dns.resolve4(domain), []),
     safeResolve(() => dns.resolve6(domain), []),
@@ -66,10 +71,10 @@ async function checkDnssec(
 ): Promise<{ enabled: boolean; dsRecord: string | null; dnskeyRecord: string | null }> {
   try {
     const [dsResult, dnskeyResult] = await Promise.all([
-      execAsync(`dig +short DS ${domain} 2>/dev/null`, { timeout: 10000 }).catch(
+      execFileAsync("dig", ["+short", "DS", domain], { timeout: 10000 }).catch(
         () => ({ stdout: "" })
       ),
-      execAsync(`dig +short DNSKEY ${domain} 2>/dev/null`, { timeout: 10000 }).catch(
+      execFileAsync("dig", ["+short", "DNSKEY", domain], { timeout: 10000 }).catch(
         () => ({ stdout: "" })
       ),
     ]);
@@ -77,7 +82,7 @@ async function checkDnssec(
     const ds = dsResult.stdout.trim() || null;
     const dnskey = dnskeyResult.stdout.trim() || null;
 
-    return { enabled: !!ds, dsRecord: ds, dnskeyRecord: dnskey };
+    return { enabled: !!ds && !!dnskey, dsRecord: ds, dnskeyRecord: dnskey };
   } catch {
     return { enabled: false, dsRecord: null, dnskeyRecord: null };
   }

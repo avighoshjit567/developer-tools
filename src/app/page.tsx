@@ -30,7 +30,7 @@ const tools = [
     description: "MX, SPF, DKIM, DMARC, blacklist analysis for any domain.",
     icon: Mail,
     href: "/email-dns-checker",
-    active: false,
+    active: true,
     color: "text-icon-warning bg-surface-warning-light dark:bg-surface-warning-dark",
   },
   {

@@ -44,6 +44,7 @@ export function ScoreCircle({
   const progress = (animatedScore / 100) * circumference;
 
   useEffect(() => {
+    let rafId: number;
     const duration = 1000;
     const startTime = Date.now();
     const animate = () => {
@@ -52,9 +53,10 @@ export function ScoreCircle({
       // Ease out cubic
       const eased = 1 - Math.pow(1 - pct, 3);
       setAnimatedScore(Math.round(eased * score));
-      if (pct < 1) requestAnimationFrame(animate);
+      if (pct < 1) rafId = requestAnimationFrame(animate);
     };
-    requestAnimationFrame(animate);
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
   }, [score]);
 
   return (

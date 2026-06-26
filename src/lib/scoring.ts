@@ -203,8 +203,8 @@ function getGrade(score: number, data: CheckData): string {
     !data.ssl.active || data.blacklist.blacklistedOn.length > 0;
 
   if (score >= 95 && !hasCritical) return "A+";
-  if (score >= 90) return "A";
-  if (score >= 85) return "A-";
+  if (score >= 90 && !hasCritical) return "A";
+  if (score >= 85 && !hasCritical) return "A-";
   if (score >= 80) return "B+";
   if (score >= 75) return "B";
   if (score >= 70) return "B-";

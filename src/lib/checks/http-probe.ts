@@ -160,9 +160,11 @@ export async function checkHttpProbe(domain: string): Promise<HttpProbeResult> {
       const robotsRes = await fetchWithTimeout(`https://${domain}/robots.txt`, {
         timeout: 5000,
       });
-      if (robotsRes.ok) {
+      if (robotsRes.status === 404) {
+        result.robotsIndexable = true;
+      } else if (robotsRes.ok) {
         const robotsBody = await robotsRes.text();
-        result.robotsIndexable = !robotsBody.includes("Disallow: /\n");
+        result.robotsIndexable = !/Disallow:\s*\/\s*$/m.test(robotsBody);
       }
     } catch {
       result.robotsIndexable = false;

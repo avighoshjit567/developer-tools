@@ -60,6 +60,12 @@ function extractVersionFromAssets(html: string): string | null {
   return sorted[0]?.[0] || null;
 }
 
+function normalizeVersion(v: string): string {
+  const parts = v.split('.').map(Number);
+  while (parts.length < 3) parts.push(0);
+  return parts.join('.');
+}
+
 export async function checkWpDetect(domain: string, pageHtml?: string): Promise<WpDetectResult> {
   const result: WpDetectResult = {
     isWordPress: false,
@@ -232,7 +238,7 @@ export async function checkWpDetect(domain: string, pageHtml?: string): Promise<
 
   // Compare versions
   if (result.version !== null && result.latestVersion !== null) {
-    result.isLatest = result.version === result.latestVersion;
+    result.isLatest = normalizeVersion(result.version) === normalizeVersion(result.latestVersion);
   }
 
   return result;

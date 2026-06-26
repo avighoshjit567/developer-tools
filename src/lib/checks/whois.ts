@@ -1,7 +1,15 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+function sanitizeDomain(domain: string): string {
+  return domain.replace(/[^a-z0-9.-]/gi, '').toLowerCase();
+}
+
+function isValidHostname(host: string): boolean {
+  return /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(host) && !host.includes('..');
+}
 
 export interface WhoisResult {
   registrar: string;
@@ -53,15 +61,16 @@ function getTld(domain: string): string {
 }
 
 async function fetchWhoisViaIana(domain: string): Promise<string> {
-  const { stdout: ianaOut } = await execAsync(
-    `whois -h whois.iana.org ${domain} 2>/dev/null`,
+  const { stdout: ianaOut } = await execFileAsync(
+    "whois", ["-h", "whois.iana.org", domain],
     { timeout: 15000 }
   );
   const referMatch = ianaOut.match(/^refer:\s*(.+)$/im);
   if (!referMatch) throw new Error("No refer server found in IANA response");
   const referServer = referMatch[1].trim();
-  const { stdout } = await execAsync(
-    `whois -h ${referServer} ${domain} 2>/dev/null`,
+  if (!isValidHostname(referServer)) throw new Error("Invalid refer server hostname");
+  const { stdout } = await execFileAsync(
+    "whois", ["-h", referServer, domain],
     { timeout: 15000 }
   );
   return stdout;
@@ -111,9 +120,10 @@ async function followRegistrarReferral(
   if (!referralMatch) return null;
   const registrarServer = referralMatch[1].trim();
   if (registrarServer.includes("verisign")) return null;
+  if (!isValidHostname(registrarServer)) return null;
   try {
-    const { stdout } = await execAsync(
-      `whois -h ${registrarServer} ${domain} 2>/dev/null`,
+    const { stdout } = await execFileAsync(
+      "whois", ["-h", registrarServer, domain],
       { timeout: 15000 }
     );
     if (stdout.length > 100 && /Creation Date/i.test(stdout)) {
@@ -151,11 +161,15 @@ interface RdapResponse {
  */
 async function fetchViaRdap(domain: string): Promise<WhoisResult | null> {
   try {
-    const { stdout } = await execAsync(
-      `curl -sL "https://rdap.org/domain/${domain}" -H "Accept: application/rdap+json" --max-time 10`,
-      { timeout: 15000 }
-    );
-    const data: RdapResponse = JSON.parse(stdout);
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
+      signal: controller.signal,
+      headers: { Accept: "application/rdap+json" },
+      redirect: "follow",
+    });
+    clearTimeout(id);
+    const data: RdapResponse = await res.json();
     if (!data.events) return null;
 
     let createdDate: string | null = null;
@@ -201,7 +215,7 @@ async function fetchViaRdap(domain: string): Promise<WhoisResult | null> {
       expiryDaysRemaining: calculateExpiryDaysRemaining(expiryDate),
       domainAge: calculateAge(createdDate),
       nameServers,
-      raw: stdout,
+      raw: JSON.stringify(data),
     };
   } catch {
     return null;
@@ -214,8 +228,8 @@ async function fetchWhoisRaw(domain: string): Promise<string> {
 
   if (tldServer) {
     try {
-      const { stdout } = await execAsync(
-        `whois -h ${tldServer} ${domain} 2>/dev/null`,
+      const { stdout } = await execFileAsync(
+        "whois", ["-h", tldServer, domain],
         { timeout: 15000 }
       );
       // Check if we got actual domain-level data
@@ -237,7 +251,7 @@ async function fetchWhoisRaw(domain: string): Promise<string> {
 
   // Generic whois
   try {
-    const { stdout } = await execAsync(`whois ${domain} 2>/dev/null`, {
+    const { stdout } = await execFileAsync("whois", [domain], {
       timeout: 15000,
     });
     if (!isTldLevelResponse(stdout, domain) && stdout.length > 50) {
@@ -294,10 +308,13 @@ function calculateAge(dateStr: string | null): string {
     if (totalDays < 0) return "Unknown";
     if (totalDays < 1) return "Less than a day";
     if (totalDays < 30) return `${totalDays} day${totalDays > 1 ? "s" : ""} old`;
-    const totalMonths = Math.floor(totalDays / 30.44);
-    if (totalMonths < 12) return `${totalMonths} month${totalMonths > 1 ? "s" : ""} old`;
-    const y = Math.floor(totalMonths / 12);
-    const m = totalMonths % 12;
+    if (totalDays < 365) {
+      const totalMonths = Math.floor(totalDays / 30.44);
+      return `${totalMonths} month${totalMonths > 1 ? "s" : ""} old`;
+    }
+    const y = Math.floor(totalDays / 365.25);
+    const remainingDays = totalDays - Math.floor(y * 365.25);
+    const m = Math.floor(remainingDays / 30.44);
     if (m === 0) return `${y} year${y > 1 ? "s" : ""} old`;
     return `${y} year${y > 1 ? "s" : ""}, ${m} month${m > 1 ? "s" : ""} old`;
   } catch {
@@ -330,6 +347,7 @@ function calculateExpiryDaysRemaining(dateStr: string | null): number | null {
 }
 
 export async function checkWhois(domain: string): Promise<WhoisResult> {
+  domain = sanitizeDomain(domain);
   try {
     const stdout = await fetchWhoisRaw(domain);
 

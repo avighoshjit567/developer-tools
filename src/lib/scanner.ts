@@ -464,7 +464,7 @@ function buildAudit(data: {
       detail: data.ssl.active
         ? `Active — ${data.ssl.issuer} (expires ${data.ssl.validTo})`
         : "Not active",
-      status: data.ssl.active ? (data.ssl.daysRemaining > 14 ? "info" : "attention") : "issue",
+      status: data.ssl.active ? (data.ssl.daysRemaining > 14 ? "verified" : "attention") : "issue",
     },
     {
       title: "Blacklist Check",

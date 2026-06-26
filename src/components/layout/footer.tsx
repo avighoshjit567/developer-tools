@@ -9,7 +9,7 @@ export function Footer() {
             href="/"
             className="font-medium text-[var(--text-secondary)] hover:text-brand transition-colors"
           >
-            xCloud Tool Hub
+            xCloud Tools
           </Link>
           <span className="hidden sm:inline">&middot;</span>
           <span>Privacy Policy</span>

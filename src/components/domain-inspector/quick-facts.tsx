@@ -24,7 +24,7 @@ export function QuickFacts({ facts }: QuickFactsProps) {
         {showCfBanner && (
           <div className="flex items-center gap-3 rounded-lg border border-[#F48120]/20 bg-[#F48120]/5 px-3.5 py-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F48120]/10">
-              <Cloud className="h-4.5 w-4.5 text-[#F48120]" />
+              <Cloud className="h-[18px] w-[18px] text-[#F48120]" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[0.8125rem] font-semibold text-[var(--text-primary)]">

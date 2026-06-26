@@ -31,13 +31,13 @@ export default function DomainInspectorPage() {
 function DomainInspectorContent() {
   const searchParams = useSearchParams();
   const { scanning, progress, result, error, startScan } = useScanner();
-  const autoScanned = useRef(false);
+  const lastScannedDomain = useRef<string | null>(null);
 
   // Auto-scan if domain is in URL
   useEffect(() => {
     const domain = searchParams.get("domain");
-    if (domain && !autoScanned.current) {
-      autoScanned.current = true;
+    if (domain && domain !== lastScannedDomain.current) {
+      lastScannedDomain.current = domain;
       startScan(domain);
     }
   }, [searchParams, startScan]);

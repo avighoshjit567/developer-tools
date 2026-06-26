@@ -10,6 +10,7 @@ export interface WpFilesResult {
   debugLogExposed: boolean;
   debugModeOn: boolean;
   directoryListingEnabled: boolean;
+  wpContentListingEnabled: boolean;
 }
 
 async function fetchSafe(
@@ -31,7 +32,6 @@ async function fetchSafe(
 const FILE_CHECKS: Array<{ name: string; path: string }> = [
   { name: 'WordPress Readme', path: '/readme.html' },
   { name: 'WordPress License', path: '/license.txt' },
-  { name: 'wp-config.php', path: '/wp-config.php' },
   { name: 'wp-config.php Backup (.bak)', path: '/wp-config.php.bak' },
   { name: 'wp-config.php Backup (~)', path: '/wp-config.php~' },
   { name: 'wp-config-sample.php', path: '/wp-config-sample.php' },
@@ -44,6 +44,8 @@ const FILE_CHECKS: Array<{ name: string; path: string }> = [
   { name: 'wp-includes Directory', path: '/wp-includes/' },
   { name: 'Git HEAD', path: '/.git/HEAD' },
   { name: 'Backup Directory', path: '/backup/' },
+  { name: '.env', path: '/.env' },
+  { name: 'install.php', path: '/wp-admin/install.php' },
 ];
 
 const PHP_ERROR_PATTERN =
@@ -92,11 +94,24 @@ export async function checkWpFiles(
     }
   })();
 
-  const [fileChecks, debugLogConfirmed, directoryListingEnabled] =
+  // GET wp-content directory body to check for directory listing
+  const wpContentBodyPromise = (async (): Promise<boolean> => {
+    const res = await fetchSafe(`${base}/wp-content/`, 'GET', 5000);
+    if (!res || res.status !== 200) return false;
+    try {
+      const text = await res.text();
+      return text.includes('Index of');
+    } catch {
+      return false;
+    }
+  })();
+
+  const [fileChecks, debugLogConfirmed, directoryListingEnabled, wpContentListingEnabled] =
     await Promise.all([
       Promise.all(headPromises),
       debugLogGetPromise,
       uploadsBodyPromise,
+      wpContentBodyPromise,
     ]);
 
   const debugLogFile = fileChecks.find((f) => f.path === '/wp-content/debug.log');
@@ -109,5 +124,6 @@ export async function checkWpFiles(
     debugLogExposed,
     debugModeOn,
     directoryListingEnabled,
+    wpContentListingEnabled,
   };
 }

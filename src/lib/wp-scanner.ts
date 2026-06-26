@@ -359,7 +359,7 @@ function buildExposedFiles(files: { files: { name: string; path: string; accessi
 function buildFindings(
   wpDetect: { isWordPress: boolean; version: string | null; versionExposed: boolean; readmeExposed: boolean; generatorTagExposed: boolean; rssVersionExposed: boolean },
   loginSecurity: { loginPageAccessible: boolean; xmlrpcEnabled: boolean; restApiUsersExposed: boolean; restApiUserCount: number; authorEnumerationExposed: boolean; registrationOpen: boolean },
-  files: { debugLogExposed: boolean; debugModeOn: boolean; directoryListingEnabled: boolean; files: { accessible: boolean; path: string; name: string }[] },
+  files: { debugLogExposed: boolean; debugModeOn: boolean; directoryListingEnabled: boolean; wpContentListingEnabled: boolean; files: { accessible: boolean; path: string; name: string }[] },
   server: { httpsRedirect: boolean; phpVersionExposed: boolean; serverVersionExposed: boolean },
   seo: { hasSitemap: boolean; hasRobotsTxt: boolean; robotsIndexable: boolean },
   plugins: { detected: { slug: string }[] }
@@ -375,16 +375,18 @@ function buildFindings(
   findings.push({ title: "Debug.log", detail: files.debugLogExposed ? "Accessible" : "Not accessible", severity: files.debugLogExposed ? "critical" : "info", status: files.debugLogExposed ? "issue" : "verified" });
   findings.push({ title: "PHP errors/debug", detail: files.debugModeOn ? "Visible" : "Hidden", severity: files.debugModeOn ? "high" : "info", status: files.debugModeOn ? "issue" : "verified" });
   findings.push({ title: "Backup Files", detail: files.files.some((f) => (f.path.includes(".bak") || f.path.includes("~")) && f.accessible) ? "Found" : "Not found", severity: files.files.some((f) => (f.path.includes(".bak") || f.path.includes("~")) && f.accessible) ? "critical" : "info", status: files.files.some((f) => (f.path.includes(".bak") || f.path.includes("~")) && f.accessible) ? "issue" : "verified" });
-  findings.push({ title: ".env File", detail: "Not found", severity: "info", status: "verified" });
+  const envExposed = files.files.some((f) => f.path === '/.env' && f.accessible);
+  findings.push({ title: ".env File", detail: envExposed ? "Accessible" : "Not found", severity: envExposed ? "critical" : "info", status: envExposed ? "issue" : "verified" });
   findings.push({ title: "Sensitive Config Files", detail: files.files.some((f) => f.path.includes("wp-config") && f.accessible) ? "Accessible" : "Protected", severity: files.files.some((f) => f.path.includes("wp-config") && f.accessible) ? "critical" : "info", status: files.files.some((f) => f.path.includes("wp-config") && f.accessible) ? "issue" : "verified" });
   findings.push({ title: "HTTPS Redirect", detail: server.httpsRedirect ? "Active" : "Missing", severity: server.httpsRedirect ? "info" : "high", status: server.httpsRedirect ? "verified" : "issue" });
 
   // Medium/Info
-  findings.push({ title: "Install Script (install.php)", detail: "Not accessible", severity: "info", status: "verified" });
+  const installExposed = files.files.some((f) => f.path === '/wp-admin/install.php' && f.accessible);
+  findings.push({ title: "Install Script (install.php)", detail: installExposed ? "Accessible" : "Not accessible", severity: installExposed ? "medium" : "info", status: installExposed ? "attention" : "verified" });
   findings.push({ title: "readme.html", detail: wpDetect.readmeExposed ? "Accessible" : "Hidden", severity: wpDetect.readmeExposed ? "medium" : "info", status: wpDetect.readmeExposed ? "attention" : "verified" });
   findings.push({ title: "RSS Feed", detail: wpDetect.rssVersionExposed ? "Version exposed" : "Clean", severity: wpDetect.rssVersionExposed ? "medium" : "info", status: wpDetect.rssVersionExposed ? "attention" : "verified" });
   findings.push({ title: "Upload Directory Listing", detail: files.directoryListingEnabled ? "Enabled" : "Disabled", severity: files.directoryListingEnabled ? "medium" : "info", status: files.directoryListingEnabled ? "attention" : "verified" });
-  findings.push({ title: "wp-content Directory Listing", detail: "Disabled", severity: "info", status: "verified" });
+  findings.push({ title: "wp-content Directory Listing", detail: files.wpContentListingEnabled ? "Enabled" : "Disabled", severity: files.wpContentListingEnabled ? "medium" : "info", status: files.wpContentListingEnabled ? "attention" : "verified" });
   findings.push({ title: "Sitemap", detail: seo.hasSitemap ? "Found" : "Not found", severity: seo.hasSitemap ? "info" : "medium", status: seo.hasSitemap ? "verified" : "attention" });
   findings.push({ title: "Search Engine Visibility", detail: seo.robotsIndexable ? "Indexable" : "Blocked", severity: "info", status: seo.robotsIndexable ? "verified" : "attention" });
   findings.push({ title: "wp-config-sample.php", detail: files.files.some((f) => f.path.includes("wp-config-sample") && f.accessible) ? "Accessible" : "Not found", severity: "info", status: files.files.some((f) => f.path.includes("wp-config-sample") && f.accessible) ? "attention" : "verified" });
