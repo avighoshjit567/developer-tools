@@ -154,19 +154,39 @@ function WpHealthCheckerContent() {
         </div>
       )}
 
-      {/* Results */}
-      {result && !scanning && (
-        <div className="mx-auto max-w-[1210px] space-y-6">
-          {/* Not WordPress warning */}
-          {!result.isWordPress && (
-            <div className="flex items-center gap-3 rounded-[10px] bg-surface-warning-light p-4 dark:bg-surface-warning-dark">
-              <AlertTriangle className="h-5 w-5 shrink-0 text-icon-warning" />
-              <p className="text-[0.875rem] text-text-warning">
-                This site does not appear to be running WordPress. Results may be limited.
-              </p>
+      {/* Not WordPress */}
+      {result && !scanning && !result.isWordPress && (
+        <div className="mx-auto max-w-[520px] space-y-5 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-[10px] border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-8">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-warning-light dark:bg-surface-warning-dark">
+              <AlertTriangle className="h-7 w-7 text-icon-warning" />
             </div>
-          )}
+            <h2 className="text-[1.125rem] font-semibold text-[var(--text-primary)]">
+              Not a WordPress Site
+            </h2>
+            <p className="text-[0.875rem] leading-relaxed text-[var(--text-secondary)]">
+              <span className="font-semibold text-[var(--text-primary)]">{result.domain}</span>{" "}
+              does not appear to be running WordPress. This tool is designed
+              specifically for WordPress sites.
+            </p>
+            <p className="text-[0.8125rem] text-[var(--text-tertiary)]">
+              Try scanning with our{" "}
+              <a href={`/domain-inspector?domain=${result.domain}`} className="font-medium text-brand hover:text-brand-hover transition-colors">
+                Domain Inspector
+              </a>{" "}
+              instead for a general health check.
+            </p>
+          </div>
+          <div className="text-[0.75rem] text-[var(--text-tertiary)]">
+            Scanned in {(result.duration / 1000).toFixed(1)}s &middot;{" "}
+            {new Date(result.scanDate).toLocaleString()}
+          </div>
+        </div>
+      )}
 
+      {/* WordPress Results */}
+      {result && !scanning && result.isWordPress && (
+        <div className="mx-auto max-w-[1210px] space-y-6">
           {/* Share */}
           <ShareLinks domain={result.domain} basePath="/wp-health-checker" />
 

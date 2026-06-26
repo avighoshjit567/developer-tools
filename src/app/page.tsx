@@ -39,7 +39,7 @@ const tools = [
       "Plugin vulnerabilities, security headers, exposed files, and more.",
     icon: Shield,
     href: "/wp-health-checker",
-    active: false,
+    active: true,
     color: "text-icon-success bg-surface-success-light dark:bg-surface-success-dark",
   },
   {
