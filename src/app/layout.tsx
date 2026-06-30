@@ -11,11 +11,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "xCloud Tool Hub — Instant Domain Diagnostics",
+  title: "xCloud Tools — Instant Domain Diagnostics",
   description:
     "Free domain diagnostic toolkit for agencies & developers. Analyze registrar, DNS, SSL, email authentication, security headers, blacklists, and more.",
+  icons: {
+    icon: "/icon.svg",
+  },
   openGraph: {
-    title: "xCloud Tool Hub — Instant Domain Diagnostics",
+    title: "xCloud Tools — Instant Domain Diagnostics",
     description:
       "One scan. Full picture. Registration, DNS, SSL, email auth, security headers, and more.",
     type: "website",
