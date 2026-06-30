@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 const tools = [
-  { name: "Quick Scan", href: "/", badge: null },
+  { name: "Quick Scan", href: "/quick-scan", badge: null },
   { name: "Domain Inspector", href: "/domain-inspector", badge: null },
   { name: "Email DNS Checker", href: "/email-dns-checker", badge: null },
   { name: "WP Health Checker", href: "/wp-health-checker", badge: null },

@@ -63,7 +63,7 @@ const tools = [
     description: "All tools in one scan — full domain health report.",
     icon: Zap,
     href: "/quick-scan",
-    active: false,
+    active: true,
     color: "text-icon-warning bg-surface-warning-light dark:bg-surface-warning-dark",
   },
 ];
@@ -90,7 +90,7 @@ export default function HomePage() {
   const router = useRouter();
 
   function handleScan(domain: string) {
-    router.push(`/domain-inspector?domain=${encodeURIComponent(domain)}`);
+    router.push(`/quick-scan?domain=${encodeURIComponent(domain)}`);
   }
 
   return (
