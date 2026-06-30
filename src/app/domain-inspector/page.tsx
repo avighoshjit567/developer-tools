@@ -12,6 +12,8 @@ import { WhatToFix } from "@/components/domain-inspector/what-to-fix";
 import { SummaryCards } from "@/components/domain-inspector/summary-cards";
 import { AuditObservations } from "@/components/domain-inspector/audit-observations";
 import { ShareLinks } from "@/components/domain-inspector/share-links";
+import { CopyMarkdownButton } from "@/components/ui/copy-markdown-button";
+import { domainToMarkdown } from "@/lib/markdown-export";
 import { AlertCircle } from "lucide-react";
 
 export default function DomainInspectorPage() {
@@ -87,8 +89,11 @@ function DomainInspectorContent() {
       {/* Results */}
       {result && !scanning && (
         <div className="mx-auto max-w-[1210px] space-y-6">
-          {/* Share */}
-          <ShareLinks domain={result.domain} />
+          {/* Share + Copy */}
+          <div className="flex items-center justify-between">
+            <ShareLinks domain={result.domain} />
+            <CopyMarkdownButton getMarkdown={() => domainToMarkdown(result)} />
+          </div>
 
           {/* Score + Quick Facts */}
           <div className="grid gap-6 lg:grid-cols-2">

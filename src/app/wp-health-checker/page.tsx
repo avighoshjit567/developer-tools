@@ -16,6 +16,8 @@ import { WpDetectedPlugins } from "@/components/wp-health/wp-detected-plugins";
 import { WpAccessAndApi } from "@/components/wp-health/wp-access-api";
 import { WpVersionExposure } from "@/components/wp-health/wp-version-exposure";
 import { ShareLinks } from "@/components/domain-inspector/share-links";
+import { CopyMarkdownButton } from "@/components/ui/copy-markdown-button";
+import { wpToMarkdown } from "@/lib/markdown-export";
 import { AlertCircle, AlertTriangle, HelpCircle } from "lucide-react";
 
 const RECENT_KEY = "wp-health-recent";
@@ -191,8 +193,11 @@ function WpHealthCheckerContent() {
       {/* WordPress Results */}
       {result && !scanning && result.isWordPress && (
         <div className="mx-auto max-w-[1210px] space-y-6">
-          {/* Share */}
-          <ShareLinks domain={result.domain} basePath="/wp-health-checker" />
+          {/* Share + Copy */}
+          <div className="flex items-center justify-between">
+            <ShareLinks domain={result.domain} basePath="/wp-health-checker" />
+            <CopyMarkdownButton getMarkdown={() => wpToMarkdown(result)} />
+          </div>
 
           {/* Score + Quick Facts */}
           <div className="grid gap-6 lg:grid-cols-2">

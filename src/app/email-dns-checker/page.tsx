@@ -15,6 +15,8 @@ import { DkimDetails } from "@/components/email-dns/dkim-details";
 import { DmarcDetails } from "@/components/email-dns/dmarc-details";
 import { BlacklistStatus } from "@/components/email-dns/blacklist-status";
 import { ShareLinks } from "@/components/domain-inspector/share-links";
+import { CopyMarkdownButton } from "@/components/ui/copy-markdown-button";
+import { emailToMarkdown } from "@/lib/markdown-export";
 import { AlertCircle } from "lucide-react";
 
 const RECENT_KEY = "email-dns-recent";
@@ -140,8 +142,11 @@ function EmailDnsCheckerContent() {
       {/* Results */}
       {result && !scanning && (
         <div className="mx-auto max-w-[1210px] space-y-6">
-          {/* Share */}
-          <ShareLinks domain={result.domain} basePath="/email-dns-checker" />
+          {/* Share + Copy */}
+          <div className="flex items-center justify-between">
+            <ShareLinks domain={result.domain} basePath="/email-dns-checker" />
+            <CopyMarkdownButton getMarkdown={() => emailToMarkdown(result)} />
+          </div>
 
           {/* Score + Quick Facts */}
           <div className="grid gap-6 lg:grid-cols-2">
